@@ -1,0 +1,22 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.luishdzl.gymtracker
+productName: gymtracker
+asar: false
+npmRebuild: false
+nodeGypRebuild: true
+files:
+  - filter:
+      - src/**/*
+      - backend/**/*
+      - public/**/*
+extraResources:
+  - from: backend
+    to: backend
+  - from: public
+    to: public
+win:
+  target: nsis
+  icon: public/icon.ico
+electronVersion: 34.1.0

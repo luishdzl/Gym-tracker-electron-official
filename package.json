@@ -1,0 +1,61 @@
+{
+  "name": "gymtracker",
+  "productName": "gymtracker",
+  "version": "1.0.0",
+  "description": "gymtracker",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --windows",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "postinstall": "electron-rebuild"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.6.1",
+    "@electron-forge/maker-deb": "^7.6.1",
+    "@electron-forge/maker-rpm": "^7.6.1",
+    "@electron-forge/maker-squirrel": "^7.6.1",
+    "@electron-forge/maker-zip": "^7.6.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.6.1",
+    "@electron-forge/plugin-fuses": "^7.6.1",
+    "@electron/fuses": "^1.8.0",
+    "electron": "34.1.0",
+    "electron-rebuild": "^3.2.9"
+  },
+  "keywords": [],
+  "author": {
+    "name": "luishdzl",
+    "email": "lh88779+20@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.1"
+  },
+  "build": {
+    "appId": "com.luishdzl.gymtracker",
+    "productName": "gymtracker",
+    "asar": false,
+    "npmRebuild": false,
+    "nodeGypRebuild": true,
+    "files": [
+      "src/**/*",
+      "backend/**/*",
+      "public/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend"
+      },
+      {
+        "from": "public",
+        "to": "public"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    }
+  }
+}
