@@ -1,5 +1,5 @@
 {
-  "name": "mi-app-electron",
+  "name": "gym-tracker",
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
@@ -8,8 +8,8 @@
     "dist": "electron-builder"
   },
   "build": {
-    "appId": "com.tuempresa.miappelectron",
-    "productName": "MiAppElectron",
+    "appId": "com.tuempresa.gymtracker",
+    "productName": "GymTracker",
     "directories": {
       "output": "dist"
     },

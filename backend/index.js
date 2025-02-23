@@ -22,16 +22,16 @@ const db = new sqlite3.Database(dbPath, (err) => {
     // Crear todas las tablas
     db.serialize(() => {
       db.run(`
-        CREATE TABLE IF NOT EXISTS user (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT,
-          age INTEGER,
-          weight REAL,
-          height REAL,
-          target_weight REAL,
-          water_goal REAL,
-          sleep_goal REAL,
-          kcal_goal INTEGER
+    CREATE TABLE IF NOT EXISTS usuario (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      age INTEGER,
+      weight REAL,
+      height REAL,
+      target_weight REAL,
+      water_goal REAL,
+      sleep_goal REAL,
+      kcal_goal INTEGER
         )
       `);
 
