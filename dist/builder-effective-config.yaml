@@ -1,0 +1,14 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.tuempresa.gymtracker
+productName: GymTracker
+files:
+  - filter:
+      - main.js
+      - backend/**/*
+      - frontend/build/**/*
+      - package.json
+win:
+  target: nsis
+electronVersion: 34.2.0
