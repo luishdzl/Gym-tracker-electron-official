@@ -7,8 +7,10 @@ require('./backend/index');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+"width": 1280,
+"height": 720,
+"resizable": true,
+"maximized": true,
     webPreferences: {
       // No se habilita la integración de Node en el render para mayor seguridad
       nodeIntegration: false,
