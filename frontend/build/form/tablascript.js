@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para cargar los datos de la fecha específica
     function loadWorkoutsByDate(dateId) {
-      fetch(`http://localhost:3000/api/workouts/date/${dateId}`)
+      fetch(`http://localhost:3001/api/workouts/date/${dateId}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Error al cargar los datos de ejercicios.');
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (date) {
       // Obtener el date_id desde el backend
-      fetch('http://localhost:3000/api/dates', {
+      fetch('http://localhost:3001/api/dates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const workoutId = event.target.getAttribute('data-id');
 
         if (confirm('¿Seguro que deseas eliminar este registro?')) {
-          fetch(`http://localhost:3000/api/workouts/${workoutId}`, {
+          fetch(`http://localhost:3001/api/workouts/${workoutId}`, {
             method: 'DELETE',
           })
             .then(response => {

@@ -274,7 +274,7 @@
   
     if (date) {
       // Enviar fecha al backend para registrar u obtener su ID
-      fetch('http://localhost:3000/api/dates', {
+      fetch('http://localhost:3001/api/dates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -306,7 +306,7 @@
   <script>
         // Cargar los nombres de los ejercicios desde el servidor 
         document.addEventListener("DOMContentLoaded", function () {
-  fetch("http://localhost:3000/api/exercise_names")
+  fetch("http://localhost:3001/api/exercise_names")
     .then((response) => response.json())
     .then((exercises) => {
       const select = document.getElementById("exercise");
@@ -349,7 +349,7 @@ event.preventDefault();
   }
 
   // Enviar los datos al servidor
-  fetch("http://localhost:3000/api/workouts", {
+  fetch("http://localhost:3001/api/workouts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Función para cargar calorías por date_id
     async function loadCalories(dateId) {
       try {
-        const response = await fetch(`http://localhost:3000/api/kcal/${dateId}`);
+        const response = await fetch(`http://localhost:3001/api/kcal/${dateId}`);
         if (!response.ok) {
           if (response.status === 404) {
             // Si no hay registro, limpiar el input
@@ -423,7 +423,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Función para guardar o actualizar las calorías
     async function saveCalories(dateId, calories) {
       try {
-        const response = await fetch('http://localhost:3000/api/kcal', {
+        const response = await fetch('http://localhost:3001/api/kcal', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -480,7 +480,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Función para cargar litros por date_id
       async function loadLiters(dateId) {
         try {
-          const response = await fetch(`http://localhost:3000/api/water/${dateId}`);
+          const response = await fetch(`http://localhost:3001/api/water/${dateId}`);
           if (!response.ok) {
             if (response.status === 404) {
               // Si no hay registro, limpiar el input
@@ -501,7 +501,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Función para guardar o actualizar los litros
       async function saveLiters(dateId, liters) {
         try {
-          const response = await fetch('http://localhost:3000/api/water', {
+          const response = await fetch('http://localhost:3001/api/water', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -558,7 +558,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Función para cargar horas por date_id
       async function loadLiters(dateId) {
         try {
-          const response = await fetch(`http://localhost:3000/api/sleep/${dateId}`);
+          const response = await fetch(`http://localhost:3001/api/sleep/${dateId}`);
           if (!response.ok) {
             if (response.status === 404) {
               // Si no hay registro, limpiar el input
@@ -579,7 +579,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // Función para guardar o actualizar las horas
       async function saveHours(dateId, hours) {
         try {
-          const response = await fetch('http://localhost:3000/api/sleep', {
+          const response = await fetch('http://localhost:3001/api/sleep', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

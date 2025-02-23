@@ -1,122 +1,100 @@
-const fs = require('fs'); // <-- Añade esta línea
+// backend/index.js
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
-const cors = require('cors');
 const path = require('path');
+const { app } = require('electron');
 
-const app = express();
-const PORT = 3000;
+const userDataPath = app.getPath('userData');
+const dbPath = path.join(userDataPath, 'data.db');
 
+const appExpress = express();
+const port = 3001;
 
-const dbPath = process.env.DB_PATH; // <-- Definir primero
-const dir = path.dirname(dbPath); // <-- Luego usar
+appExpress.use(express.json());
 
-// Verificar/Crear el directorio
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
-}
-// Conexión directa SIN crear directorios
-const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+// Configuración de la base de datos
+const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('Error código:', err.code);
-    console.error('Mensaje SQLite:', err.message);
-    process.exit(1);
+    console.error("Error al abrir la base de datos:", err.message);
+  } else {
+    console.log("Conectado a la base de datos SQLite en:", dbPath);
+    
+    // Crear todas las tablas
+    db.serialize(() => {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS user (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          age INTEGER,
+          weight REAL,
+          height REAL,
+          target_weight REAL,
+          water_goal REAL,
+          sleep_goal REAL,
+          kcal_goal INTEGER
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS date (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT UNIQUE
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS kcal (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          calories INTEGER,
+          date_id INTEGER UNIQUE,
+          FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS sleep (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          hours REAL,
+          date_id INTEGER UNIQUE,
+          FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS water (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          liters REAL,
+          date_id INTEGER UNIQUE,
+          FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS exercise_names (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT UNIQUE
+        )
+      `);
+
+      db.run(`
+        CREATE TABLE IF NOT EXISTS workouts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          exercise_id INTEGER,
+          weight REAL,
+          reps INTEGER,
+          sets INTEGER,
+          rir INTEGER,
+          date_id INTEGER,
+          FOREIGN KEY (exercise_id) REFERENCES exercise_names(id) ON DELETE CASCADE,
+          FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
+        )
+      `);
+    });
   }
-  crearTablas();
 });
-
-
-// Middleware
-app.use(express.json());
-app.use(cors());
-// Middleware para archivos estáticos (corregido)
-app.use(express.static(
-  process.env.ELECTRON 
-    ? path.join(process.resourcesPath, 'public')  // Ruta empaquetada
-    : path.join(__dirname, 'public')
-));
-// Después de conectar la DB
-console.log('✅ Ruta absoluta de la base de datos:', dbPath);
-console.log('✅ Permisos de escritura:', fs.accessSync(dbPath, fs.constants.W_OK));
-// Crear tablas si no existen
-function crearTablas() {
-db.serialize(() => {
-  // Se agregaron nuevos campos: water_goal, sleep_goal y kcal_goal
-  db.run(`
-    CREATE TABLE IF NOT EXISTS usuario (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      age INTEGER,
-      weight REAL,
-      height REAL,
-      target_weight REAL,
-      water_goal REAL,
-      sleep_goal REAL,
-      kcal_goal INTEGER
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS date (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      date TEXT UNIQUE
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS kcal (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      calories INTEGER,
-      date_id INTEGER UNIQUE,
-      FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS sleep (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      hours REAL,
-      date_id INTEGER UNIQUE,
-      FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS water (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      liters REAL,
-      date_id INTEGER UNIQUE,
-      FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS exercise_names (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT UNIQUE
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS workouts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      exercise_id INTEGER,
-      weight REAL,
-      reps INTEGER,
-      sets INTEGER,
-      rir INTEGER,
-      date_id INTEGER,
-      FOREIGN KEY (exercise_id) REFERENCES exercise_names(id) ON DELETE CASCADE,
-      FOREIGN KEY (date_id) REFERENCES date(id) ON DELETE CASCADE
-    )
-  `);
-});
-}
-
-// Rutas del usuario (actualizadas para incluir metas)
 
 // Crear usuario con metas
-app.post('/api/usuario', (req, res) => {
+appExpress.post('/api/usuario', (req, res) => {
   const { name, age, weight, height, target_weight, water_goal, sleep_goal, kcal_goal } = req.body;
 
   if (!name || !age || !weight || !height || !target_weight || water_goal == null || sleep_goal == null || kcal_goal == null) {
@@ -134,7 +112,7 @@ app.post('/api/usuario', (req, res) => {
 });
 
 // Obtener el último usuario registrado
-app.get('/api/usuario', (req, res) => {
+appExpress.get('/api/usuario', (req, res) => {
   db.get('SELECT * FROM usuario ORDER BY id DESC LIMIT 1', [], (err, row) => {
     if (err) {
       console.error("Error en la consulta a la base de datos:", err);
@@ -148,7 +126,7 @@ app.get('/api/usuario', (req, res) => {
 });
 
 // Actualizar usuario (incluyendo metas)
-app.put('/api/usuario', (req, res) => {
+appExpress.put('/api/usuario', (req, res) => {
   const { id, name, age, weight, height, target_weight, water_goal, sleep_goal, kcal_goal } = req.body;
 
   if (!id || !name || !age || !weight || !height || !target_weight || water_goal == null || sleep_goal == null || kcal_goal == null) {
@@ -165,7 +143,7 @@ app.put('/api/usuario', (req, res) => {
   );
 });
 
-app.delete('/api/usuario', (req, res) => {
+appExpress.delete('/api/usuario', (req, res) => {
   const { id } = req.body;
 
   if (!id) {
@@ -178,8 +156,9 @@ app.delete('/api/usuario', (req, res) => {
   });
 });
 
+
 // Rutas de ejercicios
-app.post('/api/workouts', (req, res) => {
+appExpress.post('/api/workouts', (req, res) => {
   const { date_id, exercise_id, weight, reps, sets, rir } = req.body;
   if (!date_id || !exercise_id || !weight || !reps || !sets || !rir) {  
     return res.status(400).json({ error: 'Todos los campos son obligatorios' });
@@ -195,7 +174,7 @@ app.post('/api/workouts', (req, res) => {
   );
 });
 
-app.get('/api/workouts', (req, res) => {
+appExpress.get('/api/workouts', (req, res) => {
   db.all(
     `SELECT workouts.id, workouts.date, exercise_names.name AS exercise, workouts.weight, workouts.reps, workouts.sets
      FROM workouts
@@ -207,7 +186,7 @@ app.get('/api/workouts', (req, res) => {
   );
 });
 
-app.put('/api/workouts/:id', (req, res) => {
+appExpress.put('/api/workouts/:id', (req, res) => {
   const { id } = req.params;
   const { weight, reps, sets } = req.body;
 
@@ -221,7 +200,7 @@ app.put('/api/workouts/:id', (req, res) => {
   );
 });
 
-app.delete('/api/workouts/:id', (req, res) => {
+appExpress.delete('/api/workouts/:id', (req, res) => {
   const { id } = req.params;
 
   db.run(`DELETE FROM workouts WHERE id = ?`, [id], function (err) {
@@ -230,7 +209,7 @@ app.delete('/api/workouts/:id', (req, res) => {
   });
 });
 
-app.get('/api/workouts/date/:date_id', (req, res) => {
+appExpress.get('/api/workouts/date/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   db.all(
@@ -255,7 +234,7 @@ app.get('/api/workouts/date/:date_id', (req, res) => {
 // Rutas para exercise_names
 
 // Guardar un nuevo nombre de ejercicio
-app.post('/api/exercise_names', (req, res) => {
+appExpress.post('/api/exercise_names', (req, res) => {
   const { name } = req.body;
 
   if (!name) {
@@ -278,7 +257,7 @@ app.post('/api/exercise_names', (req, res) => {
 });
 
 // Obtener todos los nombres de ejercicios
-app.get('/api/exercise_names', (req, res) => {
+appExpress.get('/api/exercise_names', (req, res) => {
   db.all(`SELECT * FROM exercise_names`, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
@@ -286,7 +265,7 @@ app.get('/api/exercise_names', (req, res) => {
 });
 
 // Actualizar un nombre de ejercicio existente
-app.put('/api/exercise_names/:id', (req, res) => {
+appExpress.put('/api/exercise_names/:id', (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
 
@@ -315,7 +294,7 @@ app.put('/api/exercise_names/:id', (req, res) => {
 });
 
 // Eliminar un nombre de ejercicio
-app.delete('/api/exercise_names/:id', (req, res) => {
+appExpress.delete('/api/exercise_names/:id', (req, res) => {
   const { id } = req.params;
 
   db.run(`DELETE FROM exercise_names WHERE id = ?`, [id], function (err) {
@@ -330,7 +309,7 @@ app.delete('/api/exercise_names/:id', (req, res) => {
 });
 
 // Guardar o devolver ID de una fecha
-app.post('/api/dates', (req, res) => {
+appExpress.post('/api/dates', (req, res) => {
   const { date } = req.body;
 
   if (!date) {
@@ -364,7 +343,7 @@ app.post('/api/dates', (req, res) => {
 });
 
 // Obtener ID y fecha según un enlace
-app.get('/api/dates/:date', (req, res) => {
+appExpress.get('/api/dates/:date', (req, res) => {
   const { date } = req.params;
 
   db.get(
@@ -381,7 +360,7 @@ app.get('/api/dates/:date', (req, res) => {
 // Rutas "genéricas" para datos
 
 // Calorías
-app.get('/api/kcal/:date_id', (req, res) => {
+appExpress.get('/api/kcal/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   db.get(
@@ -400,14 +379,14 @@ app.get('/api/kcal/:date_id', (req, res) => {
   );
 });
 
-app.get('/api/kcal', (req, res) => {
+appExpress.get('/api/kcal', (req, res) => {
   db.all(`SELECT * FROM kcal`, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
 
-app.get('/api/kcal/date/:date_id', (req, res) => {
+appExpress.get('/api/kcal/date/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   db.all(
@@ -420,7 +399,7 @@ app.get('/api/kcal/date/:date_id', (req, res) => {
   );
 });
 
-app.post('/api/kcal', (req, res) => {
+appExpress.post('/api/kcal', (req, res) => {
   const { date_id, calories } = req.body;
 
   if (!date_id || calories == null) {
@@ -446,7 +425,7 @@ app.post('/api/kcal', (req, res) => {
 });
 
 // Agua
-app.get('/api/water/:date_id', (req, res) => {
+appExpress.get('/api/water/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   db.get(
@@ -465,14 +444,14 @@ app.get('/api/water/:date_id', (req, res) => {
   );
 });
 
-app.get('/api/water', (req, res) => {
+appExpress.get('/api/water', (req, res) => {
   db.all(`SELECT * FROM water`, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
 
-app.get('/api/water/date/:date_id', (req, res) => {
+appExpress.get('/api/water/date/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   db.all(
@@ -485,7 +464,7 @@ app.get('/api/water/date/:date_id', (req, res) => {
   );
 });
 
-app.post('/api/water', (req, res) => {
+appExpress.post('/api/water', (req, res) => {
   const { date_id, liters } = req.body;
 
   if (!date_id || liters == null) {
@@ -511,7 +490,7 @@ app.post('/api/water', (req, res) => {
 });
 
 // Sueño
-app.get('/api/sleep/:date_id', (req, res) => {
+appExpress.get('/api/sleep/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   db.get(
@@ -530,14 +509,14 @@ app.get('/api/sleep/:date_id', (req, res) => {
   );
 });
 
-app.get('/api/sleep', (req, res) => {
+appExpress.get('/api/sleep', (req, res) => {
   db.all(`SELECT * FROM sleep`, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
 
-app.get('/api/sleep/date/:date_id', (req, res) => {
+appExpress.get('/api/sleep/date/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   db.all(
@@ -550,7 +529,7 @@ app.get('/api/sleep/date/:date_id', (req, res) => {
   );
 });
 
-app.post('/api/sleep', (req, res) => {
+appExpress.post('/api/sleep', (req, res) => {
   const { date_id, hours } = req.body;
 
   if (!date_id || hours == null) {
@@ -576,7 +555,7 @@ app.post('/api/sleep', (req, res) => {
 });
 
 // Nuevo endpoint de análisis diario
-app.get('/api/analytics/daily/:date_id', (req, res) => {
+appExpress.get('/api/analytics/daily/:date_id', (req, res) => {
   const { date_id } = req.params;
 
   // Asumimos que el usuario a analizar es el último registrado
@@ -628,7 +607,7 @@ app.get('/api/analytics/daily/:date_id', (req, res) => {
 });
 
 // Nuevo endpoint para análisis de progreso avanzado
-app.get('/api/analytics/progress', (req, res) => {
+appExpress.get('/api/analytics/progress', (req, res) => {
   // Se espera que se pase el parámetro "range" (day, week o month)
   const range = req.query.range || 'day';
   const today = new Date();
@@ -681,145 +660,6 @@ app.get('/api/analytics/progress', (req, res) => {
 });
 
 
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' }); // Carpeta temporal para archivos importados
-
-// Endpoint para exportar la base de datos
-app.get('/api/export', (req, res) => {
-  const dbPath = process.env.DB_PATH; 
-  // Verifica que el archivo exista
-  fs.access(dbPath, (err) => {
-    if (err) {
-      console.error('Base de datos no encontrada:', err);
-      return res.status(500).json({ error: 'Base de datos no encontrada' });
-    }
-    res.download(dbPath, 'gymtracker.sqlite', (err) => {
-      if (err) {
-        console.error('Error al enviar el archivo:', err);
-      }
-    });
-  });
+appExpress.listen(port, () => {
+  console.log(`Servidor Express escuchando en http://localhost:${port}`);
 });
-
-// Endpoint para importar la base de datos
-// Endpoint para importar la base de datos
-app.post('/api/import', upload.single('database'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No se subió ningún archivo' });
-  }
-
-  const tempPath = req.file.path;
-
-  // Validar extensión del archivo
-  if (!req.file.originalname.endsWith('.sqlite')) {
-    fs.unlink(tempPath, () => {});
-    return res.status(400).json({ error: 'El archivo debe tener extensión .sqlite' });
-  }
-
-  // Intentar abrir la base de datos temporal para validarla
-  const tempDb = new sqlite3.Database(tempPath, sqlite3.OPEN_READONLY, (err) => {
-    if (err) {
-      fs.unlink(tempPath, () => {});
-      return res.status(400).json({ error: 'El archivo no es una base de datos SQLite válida' });
-    }
-
-    // Conectar a la base de datos principal
-    const mainDb = new sqlite3.Database(path.join(__dirname, 'gymtracker.db'));
-
-    // Desactivar claves foráneas
-    mainDb.run('PRAGMA foreign_keys = OFF');
-
-    // Lista de tablas a copiar
-    const tables = ['workouts', 'kcal', 'sleep', 'water', 'date', 'usuario', 'exercise_names'];
-
-    // 1. Vaciar tablas principales
-    mainDb.serialize(() => {
-      tables.forEach((table) => {
-        mainDb.run(`DELETE FROM ${table}`);
-      });
-
-      // 2. Copiar datos desde la base de datos temporal
-      tempDb.serialize(() => {
-        tempDb.each("SELECT name FROM sqlite_master WHERE type='table'", (err, row) => {
-          if (!tables.includes(row.name)) return;
-
-          const stmt = tempDb.prepare(`SELECT * FROM ${row.name}`);
-          stmt.each((err, rowData) => {
-            const columns = Object.keys(rowData).join(',');
-            const placeholders = Object.keys(rowData).fill('?').join(',');
-            mainDb.run(
-              `INSERT INTO ${row.name} (${columns}) VALUES (${placeholders})`,
-              Object.values(rowData),
-              (err) => {
-                if (err) console.error(`Error insertando en ${row.name}:`, err);
-              }
-            );
-          });
-          stmt.finalize();
-        }, (err) => {
-          // Finalizar procesos
-          tempDb.close();
-          mainDb.run('PRAGMA foreign_keys = ON', () => {
-            mainDb.close();
-            fs.unlink(tempPath, () => {});
-            res.status(200).json({ message: 'Base de datos importada correctamente' });
-          });
-        });
-      });
-    });
-  });
-});
-// Endpoint para borrar los datos de la base de datos (vaciar tablas)
-app.delete('/api/delete', (req, res) => {
-  db.serialize(() => {
-    // Si usas claves foráneas, es recomendable deshabilitarlas temporalmente
-    db.run('PRAGMA foreign_keys = OFF');
-
-    // Vaciar cada tabla. El orden es importante si hay relaciones de clave foránea.
-    db.run('DELETE FROM workouts', (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-    });
-    db.run('DELETE FROM kcal', (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-    });
-    db.run('DELETE FROM sleep', (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-    });
-    db.run('DELETE FROM water', (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-    });
-    db.run('DELETE FROM date', (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-    });
-    db.run('DELETE FROM exercise_names', (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-    });
-    db.run('DELETE FROM usuario', (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      // Rehabilitar las claves foráneas
-      db.run('PRAGMA foreign_keys = ON');
-      res.status(200).json({ message: 'Datos de la base de datos borrados correctamente.' });
-    });
-  });
-});
-
-
-
-
-// Ruta raíz para servir el frontend
-app.get('/', (req, res) => {
-  res.sendFile(
-    process.env.ELECTRON 
-      ? path.join(__dirname, '../public/index.html')
-      : path.join(__dirname, 'public/index.html')
-  );
-});
-
-// Middleware global para manejar errores
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Algo salió mal. Por favor, inténtalo más tarde.' });
-});
-
-// Iniciar el servidor
-app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));

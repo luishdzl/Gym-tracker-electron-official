@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para cargar los datos de la fecha específica
     function loadWaterByDate(dateId) {
-      fetch(`http://localhost:3000/api/water/date/${dateId}`)
+      fetch(`http://localhost:3001/api/water/date/${dateId}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Error al cargar los datos de hidratacion.');
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (date) {
       // Obtener el date_id desde el backend
-      fetch('http://localhost:3000/api/dates', {
+      fetch('http://localhost:3001/api/dates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

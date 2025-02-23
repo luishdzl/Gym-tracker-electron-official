@@ -1,8 +1,8 @@
-let nameId = null; // Variable para almacenar el ID del usuario
+let userId = null; // Variable para almacenar el ID del usuario
 
 // Función para obtener los datos del usuario
 function getUserInfo() {
-    fetch('http://localhost:3000/api/usuario')
+    fetch('http://localhost:3001/api/usuario')
         .then(response => response.json())
         .then(data => {
             if (data) {
@@ -25,20 +25,25 @@ function getUserInfo() {
 }
 
 // Guardar o actualizar datos del usuario
-document.getElementById('add-exercise-form').addEventListener('submit', (e) => {
+document.getElementById('user-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const userData = {
-        name: document.getElementById('add-exercise-input').value,
+        id: userId, // Enviamos el ID para la actualización
+        name: document.getElementById('name').value,
+        age: document.getElementById('age').value,
+        weight: document.getElementById('weight').value,
+        height: document.getElementById('height').value,
+        target_weight: document.getElementById('target_weight').value
     };
 
-    fetch('http://localhost:3000/api/exercise_names', {
+    fetch('http://localhost:3001/api/usuario', {
         method: 'PUT', // Usamos el método PUT para actualizar
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
     })
     .then(response => response.json())
     .then(data => {
-        alert('Datos actualizados');
+        alert('Datos del usuario actualizados');
         getUserInfo(); // Actualizar los datos mostrados
     });
 });

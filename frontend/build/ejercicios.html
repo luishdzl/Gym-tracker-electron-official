@@ -62,7 +62,7 @@
                 name: document.getElementById('add-exercise-input').value,
             };
 
-            fetch('http://localhost:3000/api/exercise_names', {
+            fetch('http://localhost:3001/api/exercise_names', {
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(exerciseData)
@@ -82,7 +82,7 @@
 
         // Obtener y mostrar todos los ejercicios
         function fetchExercises() {
-            fetch('http://localhost:3000/api/exercise_names')
+            fetch('http://localhost:3001/api/exercise_names')
                 .then(response => response.json())
                 .then(data => {
                     const exerciseList = document.getElementById('exercise-list');
@@ -112,7 +112,7 @@
         // Eliminar un ejercicio
         function deleteExercise(id) {
             if (confirm('¿Estás seguro de que deseas eliminar este ejercicio?')) {
-                fetch(`http://localhost:3000/api/exercise_names/${id}`, {
+                fetch(`http://localhost:3001/api/exercise_names/${id}`, {
                     method: 'DELETE',
                 })
                 .then(response => response.json())
@@ -132,7 +132,7 @@
         function editExercise(id, currentName) {
             const newName = prompt('Editar el nombre del ejercicio:', currentName);
             if (newName && newName !== currentName) {
-                fetch(`http://localhost:3000/api/exercise_names/${id}`, {
+                fetch(`http://localhost:3001/api/exercise_names/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: newName }),

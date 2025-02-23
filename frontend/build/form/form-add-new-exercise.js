@@ -5,7 +5,7 @@ document.getElementById('add-exercise-form').addEventListener('submit', (e) => {
       name: document.getElementById('add-exercise-input').value,
     };
   
-    fetch('http://localhost:3000/api/exercise_names', {
+    fetch('http://localhost:3001/api/exercise_names', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(exerciseData)

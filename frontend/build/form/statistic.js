@@ -1,6 +1,6 @@
   // Función que carga el feedback diario y lo muestra
   function loadDailyFeedback(dateId) {
-    fetch(`http://localhost:3000/api/analytics/daily/${dateId}`)
+    fetch(`http://localhost:3001/api/analytics/daily/${dateId}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Error al obtener el análisis diario');

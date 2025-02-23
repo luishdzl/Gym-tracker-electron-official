@@ -109,7 +109,7 @@ document.getElementById('import-btn').addEventListener('click', async () => {
 
     // Confirm delete
     confirmDelete.addEventListener('click', () => {
-      fetch('http://localhost:3000/api/delete', { method: 'DELETE' })
+      fetch('http://localhost:3001/api/delete', { method: 'DELETE' })
         .then(response => {
           if (response.ok) {
             alert('Base de datos borrada correctamente.');
